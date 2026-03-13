@@ -1,9 +1,11 @@
 const express = require("express");
+const cors = require("cors");
+
 const app = express();
 
 app.use(express.json());
+app.use(cors());
 
-// Store latest GPS location
 let latestLocation = {
   lat: null,
   lng: null,
@@ -19,14 +21,23 @@ app.get("/location", (req, res) => {
   const lat = req.query.lat;
   const lng = req.query.lng;
 
-  if (!lat || !lng) {
+  if (lat === undefined || lng === undefined) {
     return res.status(400).json({
       error: "Latitude and Longitude required"
     });
   }
 
-  latestLocation.lat = parseFloat(lat);
-  latestLocation.lng = parseFloat(lng);
+  const latNum = parseFloat(lat);
+  const lngNum = parseFloat(lng);
+
+  if (isNaN(latNum) || isNaN(lngNum)) {
+    return res.status(400).json({
+      error: "Invalid latitude or longitude"
+    });
+  }
+
+  latestLocation.lat = latNum;
+  latestLocation.lng = lngNum;
   latestLocation.updatedAt = new Date();
 
   console.log("📡 GPS Location Received");
@@ -42,7 +53,7 @@ app.get("/location", (req, res) => {
 });
 
 //////////////////////////////////////////////////////////
-// Flutter fetches GPS here
+// Flutter gets GPS here
 //////////////////////////////////////////////////////////
 
 app.get("/getLocation", (req, res) => {
@@ -65,8 +76,6 @@ app.get("/getLocation", (req, res) => {
 
 });
 
-//////////////////////////////////////////////////////////
-// Health check API
 //////////////////////////////////////////////////////////
 
 app.get("/", (req, res) => {
